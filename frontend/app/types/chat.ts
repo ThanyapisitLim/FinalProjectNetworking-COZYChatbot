@@ -1,0 +1,18 @@
+export interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  messages: Message[];
+  updatedAt: Date;
+}
+
+export interface ChatInputProps {
+  onSend: (msg: string) => void;
+  disabled?: boolean;
+}

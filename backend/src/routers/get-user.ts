@@ -1,0 +1,30 @@
+import express from "express";
+import { verifyToken, AuthRequest } from "../middleware/verifyToken";
+import { getUserByUserId } from "../controllers/user";
+import redisClient from "../config/redis";
+
+const router = express.Router();
+
+router.get("/", verifyToken, async (req: AuthRequest, res) => {
+    try {
+        const userId = req.user!.userId;
+        const cacheKey = `user:${userId}`;
+
+        const cachedUser = await redisClient.get(cacheKey);
+        if (cachedUser) {
+            return res.json(JSON.parse(cachedUser));
+        }
+
+        const user = await getUserByUserId(userId);
+        if (user && user.length > 0) {
+            await redisClient.setEx(cacheKey, 3600, JSON.stringify(user));
+        }
+
+        res.json(user);
+    } catch (error) {
+        console.error("Error retrieving user:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+export default router;
